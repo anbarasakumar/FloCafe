@@ -116,7 +116,7 @@ jobs:
         run: sudo snap install snapcraft --classic
 
       - name: Install npm dependencies
-        run: npm ci
+        run: npm install
         env:
           npm_config_build_from_source: true
 
@@ -184,7 +184,7 @@ jobs:
           node-version: '22'
 
       - name: Install npm dependencies
-        run: npm ci
+        run: npm install
 
       - name: Verify Electron dev runtime
         # npm ci already runs this via package.json's postinstall — repeated
@@ -339,7 +339,7 @@ jobs:
           node-version: '22'
 
       - name: Install npm dependencies
-        run: npm ci
+        run: npm install
 
       - name: Check Windows signing credentials
         # Shipping unsigned for now: a new WINDOWS_CERTS cert isn't a simple
