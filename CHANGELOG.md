@@ -2,6 +2,12 @@
 
 All notable changes to Flo Cafe are documented here. Dates are release dates, not commit dates. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.8] - 2026-07-31
+
+### Fixed
+- Windows USB printing: when the Rugtek (or any USB) thermal printer is configured but the USB cable is not connected, clicking Print no longer fails silently. The system now automatically falls back to the OS browser print dialog (`window.print()`) so cashiers can still get a receipt via any available printer.
+- Added Rugtek thermal printer profile (RP80/RP58 series) so the printer is correctly identified by name during auto-detect on Windows instead of showing as "Generic".
+
 ## [2.4.7] - 2026-07-29
 
 ### Fixed
