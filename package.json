@@ -152,7 +152,7 @@
     "express": "^5.2.1",
     "googleapis": "^173.0.0",
     "jsonwebtoken": "^9.0.2",
-    "libphonenumber-js": "^1.13.9",
+    "libphonenumber-js": "^1.13.10",
     "node-thermal-printer": "^4.2.1",
     "pino": "^10.3.1",
     "qrcode": "^1.5.3",

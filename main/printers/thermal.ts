@@ -1056,6 +1056,105 @@ export async function printViaUSB(data: Buffer, printerName?: string): Promise<b
   return false;
 }
 
+
+async function printViaUSBWindows(data: Buffer, printerName?: string): Promise<boolean> {
+  const name = printerName || 'RECEIPT';
+  const tmpData = `C:\\Windows\\Temp\\flo_print_${Date.now()}.bin`;
+  const tmpScript = `C:\\Windows\\Temp\\flo_rawprint_${Date.now()}.ps1`;
+
+  const psScript = `
+param([string]$PrinterName, [string]$FilePath)
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public class RawPrinterHelper {
+    [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Ansi)]
+    public class DOCINFOA {
+        [MarshalAs(UnmanagedType.LPStr)] public string pDocName;
+        [MarshalAs(UnmanagedType.LPStr)] public string pOutputFile;
+        [MarshalAs(UnmanagedType.LPStr)] public string pDataType;
+    }
+
+    [DllImport("winspool.Drv", EntryPoint="OpenPrinterA", SetLastError=true, CharSet=CharSet.Ansi)]
+    public static extern bool OpenPrinter(string szPrinter, out IntPtr hPrinter, IntPtr pd);
+
+    [DllImport("winspool.Drv", SetLastError=true)]
+    public static extern bool ClosePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", EntryPoint="StartDocPrinterA", SetLastError=true, CharSet=CharSet.Ansi)]
+    public static extern bool StartDocPrinter(IntPtr hPrinter, int level, DOCINFOA di);
+
+    [DllImport("winspool.Drv", SetLastError=true)]
+    public static extern bool EndDocPrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", SetLastError=true)]
+    public static extern bool StartPagePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", SetLastError=true)]
+    public static extern bool EndPagePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", SetLastError=true)]
+    public static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
+
+    public static bool SendBytes(string printerName, byte[] bytes) {
+        IntPtr hPrinter;
+        DOCINFOA di = new DOCINFOA();
+        di.pDocName = "Flo Receipt";
+        di.pDataType = "RAW";
+        int written;
+
+        if (!OpenPrinter(printerName, out hPrinter, IntPtr.Zero)) return false;
+        try {
+            if (!StartDocPrinter(hPrinter, 1, di)) return false;
+            try {
+                if (!StartPagePrinter(hPrinter)) return false;
+                IntPtr p = Marshal.AllocCoTaskMem(bytes.Length);
+                try {
+                    Marshal.Copy(bytes, 0, p, bytes.Length);
+                    bool ok = WritePrinter(hPrinter, p, bytes.Length, out written);
+                    EndPagePrinter(hPrinter);
+                    return ok;
+                } finally {
+                    Marshal.FreeCoTaskMem(p);
+                }
+            } finally {
+                EndDocPrinter(hPrinter);
+            }
+        } finally {
+            ClosePrinter(hPrinter);
+        }
+    }
+}
+"@
+
+$bytes = [System.IO.File]::ReadAllBytes($FilePath)
+$ok = [RawPrinterHelper]::SendBytes($PrinterName, $bytes)
+if ($ok) { Write-Output "PRINT_OK" } else { Write-Output "PRINT_FAILED"; exit 1 }
+`;
+
+  try {
+    fs.writeFileSync(tmpData, data);
+    fs.writeFileSync(tmpScript, psScript);
+
+    const output = execFileSync(
+      'powershell',
+      ['-ExecutionPolicy', 'Bypass', '-File', tmpScript, '-PrinterName', name, '-FilePath', tmpData],
+      { encoding: 'utf8' }
+    );
+
+    console.log('[Printer] Windows raw print output:', output.trim());
+    return output.includes('PRINT_OK');
+  } catch (err: any) {
+    console.error('[Printer] Windows raw print error:', err.message);
+    return false;
+  } finally {
+    try { fs.unlinkSync(tmpData); } catch {}
+    try { fs.unlinkSync(tmpScript); } catch {}
+  }
+}
+
 async function printViaUSBMacOS(data: Buffer, printerName?: string): Promise<boolean> {
   const tmpFile = `/tmp/flo_print_${Date.now()}.bin`;
 
@@ -1077,58 +1176,6 @@ async function printViaUSBMacOS(data: Buffer, printerName?: string): Promise<boo
   }
 }
 
-async function printViaUSBWindows(data: Buffer, printerName?: string): Promise<boolean> {
-  try {
-    const printerLib = require('node-thermal-printer');
-    const ThermalPrinter = printerLib.printer;
-    const PrinterTypes = printerLib.types;
-
-    const printer = new ThermalPrinter({
-      type: PrinterTypes.EPSON,
-      interface: printerName ? `printer:${printerName}` : undefined,
-      width: 48,
-    });
-
-    const isConnected = await printer.isPrinterConnected();
-    console.log('[Printer] Windows printer connected:', isConnected);
-
-    if (!isConnected) {
-      console.error('[Printer] No USB printer detected');
-      return false;
-    }
-
-    printer.printRaw(data);
-    await printer.execute();
-    console.log('[Printer] Windows print sent successfully');
-    return true;
-  } catch (err: any) {
-    console.error('[Printer] Windows print error:', err.message);
-
-    console.log('[Printer] Trying raw Windows printing...');
-    return await printViaWindowsRaw(data, printerName);
-  }
-}
-
-async function printViaWindowsRaw(data: Buffer, printerName?: string): Promise<boolean> {
-  const tmpFile = `C:\\Windows\\Temp\\flo_print_${Date.now()}.bin`;
-  try {
-    fs.writeFileSync(tmpFile, data);
-
-    const name = printerName || 'Microsoft Print to PDF';
-    // Use -EncodedCommand or direct args — never interpolate into a shell string
-    const psCommand = `Start-Process -FilePath '${tmpFile}' -Verb PrintTo -ArgumentList '${name.replace(/'/g, "''")}' -Wait`;
-
-    execFileSync('powershell', ['-Command', psCommand], { encoding: 'utf8' });
-    return true;
-  } catch (err: any) {
-    console.error('[Printer] Windows raw print error:', err.message);
-    return false;
-  } finally {
-    try {
-      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-    } catch {}
-  }
-}
 
 async function printViaUSBLinux(data: Buffer, printerName?: string): Promise<boolean> {
   const tmpFile = `/tmp/flo_print_${Date.now()}.bin`;
