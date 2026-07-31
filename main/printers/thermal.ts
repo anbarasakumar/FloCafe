@@ -510,7 +510,8 @@ async function dispatchPrint(printer: any, data: Buffer): Promise<boolean> {
         console.log('[Printer] USB printers are not supported in the App Store build. Use a network printer.');
         return false;
       }
-      return await printViaUSB(data, printer.name);
+      // Pass usb_device_path so Windows can resolve the real printer name from the port
+      return await printViaUSB(data, printer.name, printer.usb_device_path);
     case 'webusb':
       console.log('[Printer] WebUSB printer — not supported in Electron');
       return false;
@@ -1040,15 +1041,15 @@ export async function printViaNetwork(ip: string, port: number, data: Buffer): P
   });
 }
 
-export async function printViaUSB(data: Buffer, printerName?: string): Promise<boolean> {
-  console.log('[Printer] printViaUSB called, platform:', process.platform, 'printer:', printerName);
+export async function printViaUSB(data: Buffer, printerName?: string, usbDevicePath?: string): Promise<boolean> {
+  console.log('[Printer] printViaUSB called, platform:', process.platform, 'printer:', printerName, 'port:', usbDevicePath);
 
   if (process.platform === 'darwin') {
     return await printViaUSBMacOS(data, printerName);
   }
 
   if (process.platform === 'win32') {
-    return await printViaUSBWindows(data, printerName);
+    return await printViaUSBWindows(data, printerName, usbDevicePath);
   }
 
   if (process.platform === 'linux') {
@@ -1060,8 +1061,50 @@ export async function printViaUSB(data: Buffer, printerName?: string): Promise<b
 }
 
 
-async function printViaUSBWindows(data: Buffer, printerName?: string): Promise<boolean> {
-  const name = printerName || 'RECEIPT';
+/**
+ * Resolve the real Windows system printer name for a given USB port.
+ * Windows names printers by driver (e.g. "Rugtek RP80"), not by the
+ * port name (e.g. "USB001") — so we query wmic to bridge the two.
+ */
+function resolveWindowsPrinterName(portName: string): string | null {
+  try {
+    // wmic printer where "PortName='USB001'" get Name /value
+    // Output: "Name=Rugtek RP80\r\n" (or similar)
+    const out = execSync(
+      `wmic printer where "PortName='${portName}'" get Name /value`,
+      { encoding: 'utf8', timeout: 4000, stdio: ['pipe', 'pipe', 'pipe'] }
+    );
+    const match = out.match(/Name=(.+)/);
+    const resolved = match?.[1]?.trim();
+    if (resolved) {
+      console.log(`[Printer] Resolved Windows printer for port ${portName}: "${resolved}"`);
+      return resolved;
+    }
+  } catch (err: any) {
+    console.warn('[Printer] wmic port lookup failed:', err.message);
+  }
+  return null;
+}
+
+async function printViaUSBWindows(data: Buffer, printerName?: string, usbDevicePath?: string): Promise<boolean> {
+  // Build ordered list of names to try:
+  //  1. Real Windows printer name resolved from the USB port (most reliable)
+  //  2. The app-configured printer name (works only if it matches the Windows printer name)
+  const namesToTry: string[] = [];
+
+  if (usbDevicePath) {
+    const resolved = resolveWindowsPrinterName(usbDevicePath);
+    if (resolved) namesToTry.push(resolved);
+  }
+  if (printerName && !namesToTry.includes(printerName)) {
+    namesToTry.push(printerName);
+  }
+  if (namesToTry.length === 0) {
+    namesToTry.push('RECEIPT');
+  }
+
+  const name = namesToTry[0];
+  console.log('[Printer] Windows USB print using printer name:', name, '(candidates:', namesToTry, ')');
   const tmpData = `C:\\Windows\\Temp\\flo_print_${Date.now()}.bin`;
   const tmpScript = `C:\\Windows\\Temp\\flo_rawprint_${Date.now()}.ps1`;
 

@@ -2,6 +2,11 @@
 
 All notable changes to Flo Cafe are documented here. Dates are release dates, not commit dates. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.4.9] - 2026-07-31
+
+### Fixed
+- Windows USB printing: the app was calling `OpenPrinter("KOT")` (the app-level name) which fails when Windows has the printer installed under a different system name (e.g. "Rugtek RP80"). The fix queries `wmic printer where "PortName='USB001'"` at print time to discover the real Windows printer name, then uses that for the raw ESC/POS send. Direct thermal printing (KOT + bill) now works without needing the browser print fallback.
+
 ## [2.4.8] - 2026-07-31
 
 ### Fixed
