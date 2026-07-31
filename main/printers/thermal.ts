@@ -257,6 +257,9 @@ function detectWindowsMakeModel(name: string, driver: string): { make: string; m
             name.includes('TM-T88') ? 'TM-T88' :
             name.includes('TM-T82') ? 'TM-T82' :
             name.includes('TM-T20') ? 'TM-T20' : 'TM Series';
+  } else if (lower.includes('rugtek')) {
+    make = 'Rugtek';
+    model = lower.includes('58') ? 'RP58' : 'RP80';
   } else if (lower.includes('xprinter')) {
     make = 'Xprinter';
     model = lower.includes('80') ? 'Xprinter 80mm' : 'Xprinter 58mm';

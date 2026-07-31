@@ -109,7 +109,27 @@ export const usePrinterStore = create<PrinterState>()(
               await api.post('/printers/print-bill', { billId: bill.id, useUnicode: printerUseUnicode, isReprint });
               return;
             } catch (err: unknown) {
-              const e = err as { response?: { data?: { error?: string } }; message?: string };
+              const e = err as { response?: { status?: number; data?: { error?: string } }; message?: string };
+              // If the USB printer is physically unavailable (502) or not found,
+              // fall back gracefully to browser print so the cashier still gets
+              // a receipt even when the USB cable is missing on a Windows PC.
+              const status = e.response?.status;
+              if (status === 502 || status === 400) {
+                console.warn('[Printer] Hardware print failed (status', status, '), falling back to browser print');
+                const { printWebBill } = await import('@/lib/printer/web-print');
+                printWebBill(bill, tenant, {
+                  paperSize: webPrintSize,
+                  includeGst: billShowGstn,
+                  gstin: billShowGstn && billGstin ? billGstin : undefined,
+                  address: billShowAddress && billAddress ? billAddress : undefined,
+                  phone: billShowPhone && billPhone ? billPhone : undefined,
+                  footerNote: billFooterMessage || undefined,
+                  businessName: billShowName ? tenant.business_name : undefined,
+                  useUnicode: printerUseUnicode,
+                  isReprint,
+                });
+                return;
+              }
               throw new Error(e.response?.data?.error || e.message || 'Print failed');
             }
           }
@@ -202,7 +222,20 @@ export const usePrinterStore = create<PrinterState>()(
               await api.post('/printers/print-kot', { orderId: order.id, useUnicode: printerUseUnicode });
               return;
             } catch (err: unknown) {
-              const e = err as { response?: { data?: { error?: string } }; message?: string };
+              const e = err as { response?: { status?: number; data?: { error?: string } }; message?: string };
+              // If the USB printer is physically unavailable (502) or not found,
+              // fall back gracefully to browser print (OS print dialog).
+              const status = e.response?.status;
+              if (status === 502 || status === 400) {
+                console.warn('[Printer] Hardware KOT print failed (status', status, '), falling back to browser print');
+                const { paperWidth } = get();
+                const bytes = buildKotBytes(order, { ...opts, paperWidth });
+                set({ lastPrintedBytes: bytes });
+                const pw = get().paperWidth || 80;
+                const html = `<html><body style="font-family:monospace;white-space:pre;padding:10px;">${new TextDecoder().decode(bytes)}</body></html>`;
+                await printerService.printViaBrowser(html, pw);
+                return;
+              }
               throw new Error(e.response?.data?.error || e.message || 'KOT print failed');
             }
           }

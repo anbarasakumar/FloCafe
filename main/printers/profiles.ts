@@ -67,6 +67,32 @@ export const SUPPORTED_PRINTER_PROFILES: SupportedPrinterProfile[] = [
     fontBColumns: 56,
     cutMode: 'full',
   },
+  {
+    id: 'rugtek-rp80',
+    make: 'Rugtek',
+    model: 'RP80 / RT80 Series',
+    aliases: ['rugtek', 'rugtek rp80', 'rugtek rt80', 'rp-80', 'rp80', 'rt80', 'rt-80', 'rugtek thermal'],
+    commandSet: 'escpos',
+    defaultPaperWidth: '80mm',
+    defaultPort: 9100,
+    fontAColumns: 48,
+    fontBColumns: 64,
+    cutMode: 'full',
+    notes: '80mm ESC/POS thermal printer by Rugtek. Standard ESC/POS command set, full cut.',
+  },
+  {
+    id: 'rugtek-rp58',
+    make: 'Rugtek',
+    model: 'RP58 / RT58 Series',
+    aliases: ['rugtek rp58', 'rugtek rt58', 'rp-58', 'rp58', 'rt58', 'rt-58'],
+    commandSet: 'escpos',
+    defaultPaperWidth: '58mm',
+    defaultPort: 9100,
+    fontAColumns: 42,
+    fontBColumns: 56,
+    cutMode: 'full',
+    notes: '58mm ESC/POS thermal printer by Rugtek. Standard ESC/POS command set, full cut.',
+  },
 ];
 
 export function getSupportedPrinterProfiles(): SupportedPrinterProfile[] {
