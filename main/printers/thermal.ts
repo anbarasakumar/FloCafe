@@ -1041,24 +1041,7 @@ export async function printViaNetwork(ip: string, port: number, data: Buffer): P
   });
 }
 
-export async function printViaUSB(data: Buffer, printerName?: string, usbDevicePath?: string): Promise<boolean> {
-  console.log('[Printer] printViaUSB called, platform:', process.platform, 'printer:', printerName, 'port:', usbDevicePath);
 
-  if (process.platform === 'darwin') {
-    return await printViaUSBMacOS(data, printerName);
-  }
-
-  if (process.platform === 'win32') {
-    return await printViaUSBWindows(data, printerName, usbDevicePath);
-  }
-
-  if (process.platform === 'linux') {
-    return await printViaUSBLinux(data, printerName);
-  }
-
-  console.warn('[Printer] Unsupported platform:', process.platform);
-  return false;
-}
 
 
 /**
@@ -1086,25 +1069,13 @@ function resolveWindowsPrinterName(portName: string): string | null {
   return null;
 }
 
-async function printViaUSBWindows(data: Buffer, printerName?: string, usbDevicePath?: string): Promise<boolean> {
-  // Build ordered list of names to try:
-  //  1. Real Windows printer name resolved from the USB port (most reliable)
-  //  2. The app-configured printer name (works only if it matches the Windows printer name)
-  const namesToTry: string[] = [];
 
-  if (usbDevicePath) {
-    const resolved = resolveWindowsPrinterName(usbDevicePath);
-    if (resolved) namesToTry.push(resolved);
-  }
-  if (printerName && !namesToTry.includes(printerName)) {
-    namesToTry.push(printerName);
-  }
-  if (namesToTry.length === 0) {
-    namesToTry.push('RECEIPT');
-  }
+// Hardcoded for this restaurant's setup: Windows only, printer is always "RECEIPT".
+// No cross-platform detection, no printer-name lookup — every print job goes
+// straight to this printer via the Windows print queue (winspool.drv RAW mode).
+const HARDCODED_PRINTER_NAME = 'RECEIPT';
 
-  const name = namesToTry[0];
-  console.log('[Printer] Windows USB print using printer name:', name, '(candidates:', namesToTry, ')');
+export async function printViaUSB(data: Buffer, _printerName?: string): Promise<boolean> {
   const tmpData = `C:\\Windows\\Temp\\flo_print_${Date.now()}.bin`;
   const tmpScript = `C:\\Windows\\Temp\\flo_rawprint_${Date.now()}.ps1`;
 
@@ -1186,61 +1157,18 @@ if ($ok) { Write-Output "PRINT_OK" } else { Write-Output "PRINT_FAILED"; exit 1 
 
     const output = execFileSync(
       'powershell',
-      ['-ExecutionPolicy', 'Bypass', '-File', tmpScript, '-PrinterName', name, '-FilePath', tmpData],
+      ['-ExecutionPolicy', 'Bypass', '-File', tmpScript, '-PrinterName', HARDCODED_PRINTER_NAME, '-FilePath', tmpData],
       { encoding: 'utf8' }
     );
 
-    console.log('[Printer] Windows raw print output:', output.trim());
+    console.log('[Printer] Print output:', output.trim());
     return output.includes('PRINT_OK');
   } catch (err: any) {
-    console.error('[Printer] Windows raw print error:', err.message);
+    console.error('[Printer] Print error:', err.message);
     return false;
   } finally {
     try { fs.unlinkSync(tmpData); } catch {}
     try { fs.unlinkSync(tmpScript); } catch {}
-  }
-}
-
-async function printViaUSBMacOS(data: Buffer, printerName?: string): Promise<boolean> {
-  const tmpFile = `/tmp/flo_print_${Date.now()}.bin`;
-
-  try {
-    fs.writeFileSync(tmpFile, data);
-
-    if (printerName) {
-      execFileSync('lp', ['-d', printerName, '-o', 'raw', tmpFile], { encoding: 'utf8' });
-    } else {
-      execFileSync('lp', ['-o', 'raw', tmpFile], { encoding: 'utf8' });
-    }
-
-    return true;
-  } catch (err: any) {
-    console.error('[Printer] macOS print error:', err.message);
-    return false;
-  } finally {
-    try { fs.unlinkSync(tmpFile); } catch {}
-  }
-}
-
-
-async function printViaUSBLinux(data: Buffer, printerName?: string): Promise<boolean> {
-  const tmpFile = `/tmp/flo_print_${Date.now()}.bin`;
-
-  try {
-    fs.writeFileSync(tmpFile, data);
-
-    if (printerName) {
-      execFileSync('lp', ['-d', printerName, '-o', 'raw', tmpFile], { encoding: 'utf8' });
-    } else {
-      execFileSync('lp', ['-o', 'raw', tmpFile], { encoding: 'utf8' });
-    }
-
-    return true;
-  } catch (err: any) {
-    console.error('[Printer] Linux print error:', err.message);
-    return false;
-  } finally {
-    try { fs.unlinkSync(tmpFile); } catch {}
   }
 }
 
