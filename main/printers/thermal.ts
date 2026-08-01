@@ -511,7 +511,7 @@ async function dispatchPrint(printer: any, data: Buffer): Promise<boolean> {
         return false;
       }
       // Pass usb_device_path so Windows can resolve the real printer name from the port
-      return await printViaUSB(data, printer.name, printer.usb_device_path);
+      return await printViaUSB(data, printer.name);
     case 'webusb':
       console.log('[Printer] WebUSB printer — not supported in Electron');
       return false;
