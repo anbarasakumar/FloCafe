@@ -209,7 +209,7 @@ router.post('/:id/test', requireRole('owner', 'manager'), async (req: Request, r
         success = await printViaNetwork(printer.ip_address, printer.port || 9100, testData);
         break;
       case 'usb':
-        success = await printViaUSB(testData, printer.name, printer.usb_device_path);
+        success = await printViaUSB(testData, printer.name);
         break;
       case 'webusb':
         // WebUSB is handled entirely in the browser; return the bytes for the frontend to send
