@@ -4,6 +4,10 @@ import type { Customer, Product, Addon, CartItem } from '@/lib/types';
 interface CartState {
   items: CartItem[];
   orderType: 'dine_in' | 'takeaway' | 'delivery' | 'online';
+  onlinePlatform: string; // 'Swiggy' or 'Zomato'
+  externalOrderId: string;
+  setOnlinePlatform: (platform: string) => void;
+  setExternalOrderId: (id: string) => void;
   tableId: string | null;
   customerId: number | string | null;
   customer: Customer | null;
