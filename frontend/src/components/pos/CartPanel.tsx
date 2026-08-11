@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  ShoppingCart, UtensilsCrossed, Package, Truck,
+  ShoppingCart, UtensilsCrossed, Package, Truck, Globe,
   Plus, Minus, Trash2, Pause, MapPin, SquarePen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ const orderTypeIcons = {
   dine_in: UtensilsCrossed,
   takeaway: Package,
   delivery: Truck,
+  online: Globe,
 };
 
 export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem, variant = 'sidebar', existingOrder }: Props) {
@@ -72,11 +73,14 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
       {/* Order Type */}
       <div className="p-4 border-b border-gray-100 space-y-2">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-          {(['dine_in', 'takeaway', 'delivery'] as const)
+          {(['dine_in', 'takeaway', 'delivery', 'online'] as const)
             .filter((type) => isRestaurant || type !== 'dine_in')
             .map((type) => {
               const Icon = orderTypeIcons[type];
-              const label = type === 'dine_in' ? t('pos.orderTypeDineIn') : type === 'takeaway' ? t('pos.orderTypeTakeaway') : t('pos.orderTypeDelivery');
+              const label = type === 'dine_in' ? t('pos.orderTypeDineIn') :
+                type === 'takeaway' ? t('pos.orderTypeTakeaway') :
+                type === 'delivery' ? t('pos.orderTypeDelivery') :
+                t('pos.orderTypeOnline');
               return (
                 <button
                   key={type}
