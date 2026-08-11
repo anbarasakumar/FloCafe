@@ -3,7 +3,7 @@ import type { Customer, Product, Addon, CartItem } from '@/lib/types';
 
 interface CartState {
   items: CartItem[];
-  orderType: 'dine_in' | 'takeaway' | 'delivery';
+  orderType: 'dine_in' | 'takeaway' | 'delivery' | 'online';
   tableId: string | null;
   customerId: number | string | null;
   customer: Customer | null;
