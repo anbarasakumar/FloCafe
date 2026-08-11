@@ -111,6 +111,35 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
             />
           </div>
         )}
+        {cart.orderType === 'online' && (
+          <div className="mt-3 space-y-2">
+            <label className="block text-xs font-medium text-gray-700">
+              Online Platform & Order ID
+            </label>
+            <div className="flex gap-2">
+              {/* Platform Dropdown */}
+              <select
+                value={onlinePlatform}
+                onChange={(e) => setOnlinePlatform(e.target.value)}
+                className="px-2 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+              >
+                <option value="Swiggy">Swiggy</option>
+                <option value="Zomato">Zomato</option>
+              </select>
+        
+              {/* 4-Digit Order ID Input */}
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="e.g. 1234"
+                value={externalOrderId}
+                onChange={(e) => setExternalOrderId(e.target.value)}
+                className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+        )}
+        
       </div>
 
       {/* Cart Items */}
