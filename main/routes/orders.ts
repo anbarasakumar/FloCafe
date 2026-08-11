@@ -200,7 +200,7 @@ router.get('/:id', requireRole('owner', 'manager', 'cashier', 'waiter'), (req: R
 
 router.post('/', requireRole('owner', 'manager', 'cashier', 'waiter'), (req: Request, res: Response) => {
   try {
-    const { table_id, customer_id, type, guest_count, special_instructions, packaging_charge, delivery_charge, items } = req.body;
+    const { table_id, customer_id, type, guest_count, special_instructions, packaging_charge, delivery_charge, items, external_order_id } = req.body;
     // Always the authenticated caller, never client-supplied — trusting a
     // client-sent user_id would let staff spoof order attribution, and the
     // frontend has in fact never sent one, so every order got user_id=NULL.
@@ -260,11 +260,11 @@ router.post('/', requireRole('owner', 'manager', 'cashier', 'waiter'), (req: Req
       };
 
       const orderResult = db.prepare(`
-        INSERT INTO orders (order_number, table_id, customer_id, user_id, type, guest_count, special_instructions,
+        INSERT INTO orders (order_number, external_order_id, table_id, customer_id, user_id, type, guest_count, special_instructions,
           packaging_charge, delivery_charge, packaging_tax_category_id, delivery_tax_category_id,
           service_charge_tax_category_id, status, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
-      `).run(orderNumber, table_id || null, customer_id || null, authenticatedUserId, type, guest_count || null,
+      `).run(orderNumber, external_order_id || null, table_id || null, customer_id || null, authenticatedUserId, type, guest_count || null,
         special_instructions || null, packaging_charge || 0, delivery_charge || 0,
         chargeContext.packaging_tax_category_id, chargeContext.delivery_tax_category_id,
         chargeContext.service_charge_tax_category_id, now(), now());
