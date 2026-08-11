@@ -160,7 +160,20 @@ export function buildClassicReceiptBytes(
       enc.text(maskPhoneOnReceipt(order.customer.phone)).newline();
     }
   }
-
+  // Print Swiggy / Zomato Online Order Banner prominently
+  if (order.type === 'online' || order.external_order_id) {
+    enc
+      .align('center')
+      .bold(true)
+      .width(2)
+      .height(2)
+      .text(order.external_order_id ? order.external_order_id.toUpperCase() : 'ONLINE ORDER')
+      .width(1)
+      .height(1)
+      .bold(false)
+      .newline()
+      .align('left');
+  }
   enc
     .size('small')
     .text(padRow(`Bill #${bill.bill_number}`, formatDate(bill.order?.created_at, locale), cols))
