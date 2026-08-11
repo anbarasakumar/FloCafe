@@ -1473,6 +1473,16 @@ export const MIGRATIONS: { version: number; name: string; up: () => void }[] = [
       }
     },
   },
+  {
+    version: 40,
+    name: 'add_orders_external_order_id',
+    up: () => {
+      const orderColumns = getColumns(db, 'orders');
+      if (!orderColumns.includes('external_order_id')) {
+        db.exec(`ALTER TABLE orders ADD COLUMN external_order_id TEXT DEFAULT NULL`);
+      }
+    },
+  },
 ];
 
 function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void {
@@ -1732,6 +1742,7 @@ function createSchema(): void {
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       order_number TEXT UNIQUE NOT NULL,
+      external_order_id TEXT DEFAULT NULL,
       table_id TEXT,
       customer_id TEXT,
       user_id TEXT,
