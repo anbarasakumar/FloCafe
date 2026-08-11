@@ -162,7 +162,7 @@ export function buildClassicReceiptBytes(
   }
   // Print Swiggy / Zomato Online Order Banner prominently
   // Print Swiggy / Zomato Online Order Banner prominently
-    if (order.type === 'online' || order.external_order_id) {
+    if (order?.type === 'online' || order?.external_order_id) {
       enc
         .align('center')
         .bold(true)
