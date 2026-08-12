@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart';
+const cart = useCartStore();
 import { useHeldOrdersStore } from '@/store/held-orders';
 import { useAuthStore } from '@/store/auth';
 import { usePosSettingsStore } from '@/store/pos-settings';
@@ -128,8 +129,8 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
             <div className="flex gap-2">
               {/* Platform Dropdown */}
               <select
-                value={onlinePlatform}
-                onChange={(e) => setOnlinePlatform(e.target.value)}
+                value={cart.onlinePlatform}
+                onChange={(e) => cart.setOnlinePlatform(e.target.value)}
                 className="px-2 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
               >
                 <option value="Swiggy">Swiggy</option>
@@ -141,8 +142,8 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
                 type="text"
                 maxLength={6}
                 placeholder="e.g. 1234"
-                value={externalOrderId}
-                onChange={(e) => setExternalOrderId(e.target.value)}
+                value={cart.externalOrderId}
+                onChange={(e) => cart.setExternalOrderId(e.target.value)}
                 className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
             </div>
