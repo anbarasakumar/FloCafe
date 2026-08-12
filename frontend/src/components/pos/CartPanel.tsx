@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart';
-const cart = useCartStore();
 import { useHeldOrdersStore } from '@/store/held-orders';
 import { useAuthStore } from '@/store/auth';
 import { usePosSettingsStore } from '@/store/pos-settings';
@@ -15,14 +14,6 @@ import toast from 'react-hot-toast';
 import type { Table, Order, OrderItem, CartItem } from '@/lib/types';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 
-const { 
-  orderType, 
-  items, 
-  externalOrderId, 
-  setExternalOrderId, 
-  onlinePlatform, 
-  setOnlinePlatform 
-} = useCartStore();
 
 interface Props {
   tables: Table[];
