@@ -260,14 +260,30 @@ router.post('/', requireRole('owner', 'manager', 'cashier', 'waiter'), (req: Req
       };
 
       const orderResult = db.prepare(`
-        INSERT INTO orders (order_number, external_order_id, table_id, customer_id, user_id, type, guest_count, special_instructions,
-          packaging_charge, delivery_charge, packaging_tax_category_id, delivery_tax_category_id,
-          service_charge_tax_category_id, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
-      `).run(orderNumber, external_order_id || null, table_id || null, customer_id || null, authenticatedUserId, type, guest_count || null,
-        special_instructions || null, packaging_charge || 0, delivery_charge || 0,
-        chargeContext.packaging_tax_category_id, chargeContext.delivery_tax_category_id,
-        chargeContext.service_charge_tax_category_id, now(), now());
+        INSERT INTO orders (
+          order_number, external_order_id, table_id, customer_id, user_id, type, 
+          guest_count, special_instructions, packaging_charge, delivery_charge, 
+          packaging_tax_category_id, delivery_tax_category_id, service_charge_tax_category_id, 
+          status, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+      `).run(
+        orderNumber, 
+        external_order_id || null, 
+        table_id || null, 
+        customer_id || null, 
+        authenticatedUserId, 
+        type, 
+        guest_count || null, 
+        special_instructions || null, 
+        packaging_charge || 0, 
+        delivery_charge || 0, 
+        chargeContext.packaging_tax_category_id, 
+        chargeContext.delivery_tax_category_id, 
+        chargeContext.service_charge_tax_category_id, 
+        now(), 
+        now()
+      );
 
       const orderId = orderResult.lastInsertRowid;
 
