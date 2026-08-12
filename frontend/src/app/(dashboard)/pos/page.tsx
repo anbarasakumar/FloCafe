@@ -273,6 +273,10 @@ export default function POSPage() {
         type: cart.orderType,
         guest_count: cart.guestCount,
         special_instructions: cart.orderNotes || undefined,
+        // Add the external order ID mapping here too:
+        external_order_id: cart.orderType === 'online' && cart.externalOrderId
+          ? `${cart.onlinePlatform} ${cart.externalOrderId}`.trim()
+          : null,
         items: cart.items.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
