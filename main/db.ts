@@ -2263,15 +2263,21 @@ export function generateOrderNumber(): string {
   const includeDate = getSettingValue('order_number_include_date') !== 'false';
   const resetDaily = getSettingValue('order_number_reset_daily') !== 'false';
   const timezone = getSettingValue('timezone') || 'Asia/Kolkata';
-
-  // The sequence "bucket": a per-day counter when the series resets at store
-  // midnight, or a single fixed bucket when the series is meant to keep
-  // climbing indefinitely.
   const bucket = resetDaily ? dateStampInTimezone(timezone) : 'ALL';
-  const next = getNextSequence('orders', bucket);
-
   const dateSegment = includeDate ? dateStampInTimezone(timezone) : '';
-  return [prefix, dateSegment, String(next).padStart(4, '0')].filter(Boolean).join('-');
+
+  const db = getDatabase();
+  let candidate: string;
+  let next: number;
+  do {
+    next = getNextSequence('orders', bucket);
+    candidate = [prefix, dateSegment, String(next).padStart(4, '0')].filter(Boolean).join('-');
+    const exists = db.prepare('SELECT 1 FROM orders WHERE order_number = ?').get(candidate);
+    if (!exists) break;
+    console.warn(`[Orders] order_number collision on ${candidate}, retrying with next sequence`);
+  } while (true);
+
+  return candidate;
 }
 
 export function generateBillNumber(): string {
