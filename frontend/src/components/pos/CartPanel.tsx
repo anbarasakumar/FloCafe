@@ -81,7 +81,7 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
               const label = type === 'dine_in' ? t('pos.orderTypeDineIn') :
                 type === 'takeaway' ? t('pos.orderTypeTakeaway') :
                 type === 'delivery' ? t('pos.orderTypeDelivery') :
-                t('pos.orderTypeOnline');
+                "Online";
               return (
                 <button
                   key={type}
