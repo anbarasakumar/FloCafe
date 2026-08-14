@@ -575,7 +575,7 @@ function formatCompactReceipt(order: any, bill: any, biz: any, cols: number = 48
   const tzOptions = biz.timezone ? { timeZone: biz.timezone } : undefined;
 
   lines.push('{INIT}');
-  if (isReprint) lines.push('{CENTER}{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}** REPRINT **{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}{/CENTER}');
+  if (isReprint) lines.push('{CENTER}{BOLD}** REPRINT **{/BOLD}{/CENTER}');
   lines.push('{CENTER}{BOLD}' + (biz.name || 'Store') + '{/BOLD}{/CENTER}');
   lines.push(bar);
   lines.push('Bill #: ' + (bill.bill_number || order.order_number));
@@ -649,11 +649,11 @@ function formatClassicReceipt(order: any, bill: any, biz: any, cols: number = 48
   const tzOptions = biz.timezone ? { timeZone: biz.timezone } : undefined;
 
   lines.push('{INIT}');
-  if (isReprint) lines.push('{CENTER}{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}** REPRINT **{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}{/CENTER}');
+  if (isReprint) lines.push('{CENTER}{BOLD}** REPRINT **{/BOLD}{/CENTER}');
 
   // Header: store name (Font A, big + bold), then customer name (Font B) and
   // mobile number, each only if the bill actually has that data.
-  lines.push('{CENTER}{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}' + (biz.name || 'Store') + '{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}{/CENTER}');
+  lines.push('{CENTER}{BOLD}' + (biz.name || 'Store') + '{/BOLD}{/CENTER}');
   if (biz.customer_name) lines.push('{CENTER}{FONT_B}' + biz.customer_name + '{/FONT_B}{/CENTER}');
   if (biz.customer_phone) lines.push('{CENTER}' + biz.customer_phone + '{/CENTER}');
 
