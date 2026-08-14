@@ -876,19 +876,27 @@ export function formatKOT(order: any, items: any[], stationName: string, cols: n
   const bar = '='.repeat(cols);
 
   lines.push('{INIT}');
-  lines.push('{CENTER}{BOLD}KITCHEN ORDER TICKET{/BOLD}{/CENTER}');
+  lines.push('{CENTER}{BOLD}KOT{/BOLD}{/CENTER}');
+  if (order.type === 'online' && order.external_order_id) {
+    const displayId = order.external_order_id.replace(' ', ' - ');
+    lines.push('{CENTER}{BOLD}' + displayId + '{/BOLD}{/CENTER}');
+  }
   lines.push('');
-  lines.push('Station: ' + stationName);
+  // lines.push('Station: ' + stationName);
   lines.push('Order: ' + order.order_number);
   if (order.table) {
     lines.push('Table: ' + order.table.name);
   }
-  lines.push('Time: ' + new Date(order.created_at).toLocaleTimeString(locale + '-u-nu-latn', tzOptions));
+  const orderDate = new Date(order.created_at);
+  const dateStr = orderDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', ...tzOptions });
+  const timeStr = orderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, ...tzOptions });
+  lines.push(`Date: ${dateStr} ${timeStr}`);
+  // lines.push('Time: ' + new Date(order.created_at).toLocaleTimeString(locale + '-u-nu-latn', tzOptions));
   lines.push(bar);
   lines.push('');
 
   for (const item of items) {
-    lines.push('{DOUBLE_HEIGHT}{BOLD}' + item.quantity + 'x  ' + item.product_name + '{/BOLD}{/DOUBLE_HEIGHT}');
+    lines.push('{BOLD}' + item.quantity + 'x  ' + item.product_name + '{/BOLD}');
     const addons = parseAddons(item.addons);
     for (const addon of addons) {
       if (addon?.name) {
