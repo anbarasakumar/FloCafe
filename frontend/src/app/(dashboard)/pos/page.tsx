@@ -162,7 +162,7 @@ export default function POSPage() {
     } else {
       // 2. Check if this exact product is ALREADY in the cart (with no addons and no notes)
       const existingItem = cart.items.find(
-        (item) => item.product.id === product.id && (!item.addons || item.addons.length === 0) && !item.instructions
+        (item) => item.product.id === product.id
       );
   
       if (existingItem) {
