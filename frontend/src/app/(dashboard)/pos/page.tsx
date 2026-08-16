@@ -251,22 +251,30 @@ export default function POSPage() {
       setMobileCartOpen(false);
       await refreshTables();
 
-     if(cart.orderType === 'online'){
+     if (cart.orderType === 'online') {
         await printKotIfEnabled(orderForKot);
-      }else{
+      } else {
         try {
-          await printBill(
-            { ...orderForKot.bill, order: orderForKot }, // Pass the bill with the order attached
-            {
-              business_name: currentTenant?.business_name || 'FloCafe', // Fallback just in case
-              currency,
-              country: currentTenant?.country || 'IN',
-            }
-          );
+          if (orderForKot.bill) {
+            await printBill(
+              { ...orderForKot.bill, order: orderForKot } as Bill, // <-- Added 'as Bill' to fix the TS error
+              {
+                business_name: currentTenant?.business_name || 'FloCafe', 
+                currency,
+                country: currentTenant?.country || 'IN',
+              }
+            );
+          } else {
+            // Fallback: If no bill exists yet, just print the KOT
+            await printKotIfEnabled(orderForKot);
+          }
         } catch (error) {
           console.error("Failed to print receipt:", error);
         }
       }
+
+
+      
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string; error?: string } } };
       toast.error(error.response?.data?.message || error.response?.data?.error || t('pos.placeOrderFailed'));
