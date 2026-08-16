@@ -160,18 +160,21 @@ export default function POSPage() {
     if (product.addon_groups && product.addon_groups.length > 0) {
       setAddonProduct(product);
     } else {
-      // 2. Check if this exact product is ALREADY in the cart (with no addons and no notes)
+      // 2. Check if this exact product is ALREADY in the cart (with no addons and no special instructions)
       const existingItem = cart.items.find(
-        (item) => item.product.id === product.id
+        (item) => 
+          item.product.id === product.id && 
+          (!item.addons || item.addons.length === 0) && 
+          !item.special_instructions // <-- Corrected property name
       );
   
       if (existingItem) {
         // 3. If it's already in the cart, just increase the quantity by 1
         cart.updateItemDetails(
-          existingItem.id, 
-          existingItem.quantity + 1, 
-          existingItem.addons, 
-          existingItem.instructions
+          existingItem.id,
+          existingItem.quantity + 1,
+          existingItem.addons || [],
+          existingItem.special_instructions || '' // <-- Corrected property name here too
         );
       } else {
         // 4. If it's not in the cart yet, add it as a new item
