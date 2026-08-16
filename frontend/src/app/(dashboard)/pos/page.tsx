@@ -156,8 +156,28 @@ export default function POSPage() {
   }, [isRestaurant, setBillingType, setTablesRequired, setKotPrintingEnabled]);
 
   const handleProductClick = (product: Product) => {
-    // Always open modal so user can add notes and adjust quantity
-    setAddonProduct(product);
+    // 1. If the product has customisable addons, open the popup
+    if (product.addon_groups && product.addon_groups.length > 0) {
+      setAddonProduct(product);
+    } else {
+      // 2. Check if this exact product is ALREADY in the cart (with no addons and no notes)
+      const existingItem = cart.items.find(
+        (item) => item.product.id === product.id && (!item.addons || item.addons.length === 0) && !item.instructions
+      );
+  
+      if (existingItem) {
+        // 3. If it's already in the cart, just increase the quantity by 1
+        cart.updateItemDetails(
+          existingItem.id, 
+          existingItem.quantity + 1, 
+          existingItem.addons, 
+          existingItem.instructions
+        );
+      } else {
+        // 4. If it's not in the cart yet, add it as a new item
+        cart.addItem(product, 1, [], '');
+      }
+    }
   };
 
   const handleAddonAdd = (product: Product, quantity: number, addons: Addon[], instructions: string) => {
