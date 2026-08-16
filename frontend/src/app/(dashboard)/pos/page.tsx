@@ -255,9 +255,13 @@ export default function POSPage() {
         await printKotIfEnabled(orderForKot);
       } else {
         try {
-          if (orderForKot.bill) {
+          // Generate the bill for this order first
+          const { data: billData } = await api.post('/bills/generate', { order_id: orderForKot.id });
+          const newlyGeneratedBill = billData.bill;
+      
+          if (newlyGeneratedBill) {
             await printBill(
-              { ...orderForKot.bill, order: orderForKot } as Bill, // <-- Added 'as Bill' to fix the TS error
+              { ...newlyGeneratedBill, order: orderForKot } as Bill, 
               {
                 business_name: currentTenant?.business_name || 'FloCafe', 
                 currency,
@@ -265,11 +269,13 @@ export default function POSPage() {
               }
             );
           } else {
-            // Fallback: If no bill exists yet, just print the KOT
+            // Fallback if bill generation fails
             await printKotIfEnabled(orderForKot);
           }
         } catch (error) {
-          console.error("Failed to print receipt:", error);
+          console.error("Failed to generate/print receipt:", error);
+          // If generating the bill fails, fallback to printing KOT so kitchen still gets the order
+          await printKotIfEnabled(orderForKot);
         }
       }
 
