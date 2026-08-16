@@ -251,7 +251,22 @@ export default function POSPage() {
       setMobileCartOpen(false);
       await refreshTables();
 
-      await printKotIfEnabled(orderForKot);
+     if(cart.orderType === 'online'){
+        await printKotIfEnabled(orderForKot);
+      }else{
+        try {
+          await printBill(
+            { ...orderForKot.bill, order: orderForKot }, // Pass the bill with the order attached
+            {
+              business_name: currentTenant?.business_name || 'FloCafe', // Fallback just in case
+              currency,
+              country: currentTenant?.country || 'IN',
+            }
+          );
+        } catch (error) {
+          console.error("Failed to print receipt:", error);
+        }
+      }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string; error?: string } } };
       toast.error(error.response?.data?.message || error.response?.data?.error || t('pos.placeOrderFailed'));
@@ -495,7 +510,7 @@ export default function POSPage() {
         </div>
 
         {/* Desktop Cart — always open, hidden on mobile */}
-        <div className="hidden md:flex md:w-80 md:shrink-0 h-full">
+        <div className="hidden md:flex md:w-96 md:shrink-0 h-full">
           <CartPanel {...cartPanelProps} />
         </div>
       </div>
