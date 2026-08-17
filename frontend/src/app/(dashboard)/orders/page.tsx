@@ -431,13 +431,12 @@ export default function OrdersPage() {
       // 2. Loop through the pending orders and process them.
       // Replace `handleIndividualCheckout` with whatever function you currently use for the single checkout buttons.
       for (const order of pendingOrders) {
-        await handleIndividualCheckout(order.id); 
+        await handleCheckout(order.id);
       }
       
       toast.success("All items checked out successfully!");
       // 3. Refresh your orders list here if needed (e.g., fetchOrders())
     } catch (error) {
-      console.error("Failed to checkout all:", error);
       toast.error("An error occurred during bulk checkout.");
     }
   };
