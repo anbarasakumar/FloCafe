@@ -417,9 +417,6 @@ export default function OrdersPage() {
   };
 
   const handleCheckoutAll = async () => {
-    // 1. Filter out the items/orders that are ALREADY checked out.
-    // NOTE: Change `status !== 'paid'` to whatever property determines if an item is checked out in your system!
-    // const pendingOrders = orders.filter((order) => order.status !== 'paid' && order.status !== 'cancelled');
     const pendingOrders = orders.filter((order) => order.status !== 'completed' && order.status !== 'cancelled');
 
     if (pendingOrders.length === 0) {
@@ -427,17 +424,23 @@ export default function OrdersPage() {
       return;
     }
 
+    const loadingToast = toast.loading('Processing all checkouts with Cash...');
+
     try {
-      // 2. Loop through the pending orders and process them.
-      // Replace `handleIndividualCheckout` with whatever function you currently use for the single checkout buttons.
       for (const order of pendingOrders) {
-        await handleCheckout(order.id);
+        const { data: billData } = await api.post('/bills/generate', { order_id: order.id });
+        const bill = billData.bill;
+
+        await api.post(`/bills/${bill.id}/pay`, {
+          payment_method: 'cash',
+          amount_paid: bill.total,
+        });
       }
       
-      toast.success("All items checked out successfully!");
-      // 3. Refresh your orders list here if needed (e.g., fetchOrders())
-    } catch (error) {
-      toast.error("An error occurred during bulk checkout.");
+      toast.success("All items successfully checked out with Cash!", { id: loadingToast });
+      
+    } catch (err: unknown) {
+      toast.error("An error occurred during bulk checkout.", { id: loadingToast });
     }
   };
 
