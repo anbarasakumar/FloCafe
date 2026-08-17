@@ -416,6 +416,31 @@ export default function OrdersPage() {
     }
   };
 
+  const handleCheckoutAll = async () => {
+    // 1. Filter out the items/orders that are ALREADY checked out.
+    // NOTE: Change `status !== 'paid'` to whatever property determines if an item is checked out in your system!
+    const pendingOrders = orders.filter((order) => order.status !== 'paid' && order.status !== 'cancelled');
+
+    if (pendingOrders.length === 0) {
+      toast.info("All items are already checked out!");
+      return;
+    }
+
+    try {
+      // 2. Loop through the pending orders and process them.
+      // Replace `handleIndividualCheckout` with whatever function you currently use for the single checkout buttons.
+      for (const order of pendingOrders) {
+        await handleIndividualCheckout(order.id); 
+      }
+      
+      toast.success("All items checked out successfully!");
+      // 3. Refresh your orders list here if needed (e.g., fetchOrders())
+    } catch (error) {
+      console.error("Failed to checkout all:", error);
+      toast.error("An error occurred during bulk checkout.");
+    }
+  };
+
   const handlePaymentComplete = async () => {
     const bill = paymentBill; // capture before clearing state
     setPaymentBill(null);
@@ -723,6 +748,13 @@ export default function OrdersPage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900">{t('nav.orders')}</h1>
         <div className="flex gap-2">
+          <Button 
+            onClick={handleCheckoutAll} 
+            variant="default" 
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            Checkout All
+          </Button>
           {(['all', 'active', 'unpaid', 'held'] as FilterType[]).map((f) => (
             <button
               key={f}
