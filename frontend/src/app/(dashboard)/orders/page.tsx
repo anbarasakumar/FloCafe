@@ -423,7 +423,7 @@ export default function OrdersPage() {
     const pendingOrders = orders.filter((order) => order.status !== 'completed' && order.status !== 'cancelled');
 
     if (pendingOrders.length === 0) {
-      toast.info("All items are already checked out!");
+      toast.success("All items are already checked out!");
       return;
     }
 
