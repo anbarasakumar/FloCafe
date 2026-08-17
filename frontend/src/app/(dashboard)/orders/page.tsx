@@ -419,7 +419,8 @@ export default function OrdersPage() {
   const handleCheckoutAll = async () => {
     // 1. Filter out the items/orders that are ALREADY checked out.
     // NOTE: Change `status !== 'paid'` to whatever property determines if an item is checked out in your system!
-    const pendingOrders = orders.filter((order) => order.status !== 'paid' && order.status !== 'cancelled');
+    // const pendingOrders = orders.filter((order) => order.status !== 'paid' && order.status !== 'cancelled');
+    const pendingOrders = orders.filter((order) => order.status !== 'completed' && order.status !== 'cancelled');
 
     if (pendingOrders.length === 0) {
       toast.info("All items are already checked out!");
