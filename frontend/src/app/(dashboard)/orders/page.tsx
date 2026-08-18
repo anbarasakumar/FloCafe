@@ -417,32 +417,43 @@ export default function OrdersPage() {
   };
 
   const handleCheckoutAll = async () => {
-    const pendingOrders = orders.filter((order) => order.status !== 'completed' && order.status !== 'cancelled');
+  const pendingOrders = orders.filter((order) => order.status !== 'completed' && order.status !== 'cancelled');
 
-    if (pendingOrders.length === 0) {
-      toast.success("All items are already checked out!");
-      return;
+  if (pendingOrders.length === 0) {
+    toast.success("All items are already checked out!");
+    return;
+  }
+
+  const loadingToast = toast.loading('Processing all checkouts with Cash...');
+
+  try {
+    for (const order of pendingOrders) {
+      // 1. Generate the bill
+      const { data: billData } = await api.post('/bills/generate', { order_id: order.id });
+      const bill = billData.bill;
+
+      // 2. Pay the bill instantly using the exact structure your backend expects
+      await api.post(`/bills/${bill.id}/payments`, {
+        payments: [
+          { 
+            method: 'cash', 
+            amount: Number(bill.total) 
+          }
+        ]
+        // Note: we omit customer_id here assuming it's optional for quick cash checkouts
+      });
     }
+    
+    toast.success("All items successfully checked out with Cash!", { id: loadingToast });
+    
+    // 3. Refresh the UI to show everything as paid
+    fetchOrders(); 
 
-    const loadingToast = toast.loading('Processing all checkouts with Cash...');
-
-    try {
-      for (const order of pendingOrders) {
-        const { data: billData } = await api.post('/bills/generate', { order_id: order.id });
-        const bill = billData.bill;
-
-        await api.post(`/bills/${bill.id}/pay`, {
-          payment_method: 'cash',
-          amount_paid: bill.total,
-        });
-      }
-      
-      toast.success("All items successfully checked out with Cash!", { id: loadingToast });
-      
-    } catch (err: unknown) {
-      toast.error("An error occurred during bulk checkout.", { id: loadingToast });
-    }
-  };
+  } catch (err: unknown) {
+    console.error("Failed to checkout all:", err);
+    toast.error("An error occurred during bulk checkout.", { id: loadingToast });
+  }
+};
 
   const handlePaymentComplete = async () => {
     const bill = paymentBill; // capture before clearing state
